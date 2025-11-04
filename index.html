@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Question Timer</title>
+    <!-- Load Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Custom font */
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        /* Ensure consistent font for timer */
+        #timerDisplay {
+            font-family: 'Courier New', Courier, monospace;
+        }
+        /* Custom styles for message box */
+        #messageBox {
+            transition: opacity 0.3s ease-in-out;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 text-gray-800 flex items-center justify-center min-h-screen p-4">
+
+    <div class="w-full max-w-4xl bg-white rounded-lg shadow-xl p-6 md:p-8">
+        <h1 class="text-3xl font-bold text-center text-indigo-600 mb-6">Question Timer</h1>
+
+        <!-- Main Content Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
+
+            <!-- Left Column: Controls & Timer -->
+            <div class="flex flex-col space-y-6">
+                
+                <!-- Session Controls -->
+                <div id="sessionControls" class="space-y-4">
+                    <button id="startSessionBtn" class="w-full bg-indigo-600 text-white font-semibold py-3 px-4 rounded-lg shadow-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-opacity-75 transition duration-200">
+                        Start New Session
+                    </button>
+                    
+                    <!-- Ideal Time Input (hidden by default) -->
+                    <div id="idealTimeContainer" class="hidden space-y-2">
+                        <label for="idealTimeInput" class="block text-sm font-medium text-gray-700">Ideal Time (in minutes):</label>
+                        <div class="flex space-x-2">
+                            <input type="number" id="idealTimeInput" min="0.1" step="0.1" class="flex-grow p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="e.g., 4">
+                            <button id="confirmTimeBtn" class="bg-green-600 text-white font-semibold py-2 px-4 rounded-lg shadow-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500">
+                                Set
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Timer Display -->
+                <div class="text-center">
+                    <div id="timerDisplay" class="text-7xl font-bold text-gray-800" style="font-family: 'Courier New', Courier, monospace;">
+                        00:00:00
+                    </div>
+                    <div id="messageArea" class="text-lg text-gray-600 h-6 mt-2">
+                        <!-- Messages like "Hit Enter" will appear here -->
+                    </div>
+                </div>
+
+                <!-- "Next Question" Button (for mobile/tap) -->
+                <button id="nextQuestionBtn" class="hidden w-full my-4 py-8 bg-blue-500 text-white font-semibold rounded-lg shadow-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-75 transition duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center text-2xl text-center">
+                    Start
+                </button>
+
+                <!-- Pause Session Button -->
+                <button id="pauseSessionBtn" class="hidden w-full bg-yellow-500 text-white font-semibold py-3 px-4 rounded-lg shadow-md hover:bg-yellow-600 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:ring-opacity-75 transition duration-200">
+                    Pause Session
+                </button>
+
+                <!-- End Session Button -->
+                <button id="endSessionBtn" class="hidden w-full bg-red-600 text-white font-semibold py-3 px-4 rounded-lg shadow-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-opacity-75 transition duration-200">
+                    End Session
+                </button>
+
+            </div>
+
+            <!-- Right Column: Results -->
+            <div class="flex flex-col space-y-4">
+                <!-- Summary Area -->
+                <div id="summaryArea" class="bg-indigo-50 p-4 rounded-lg text-center h-20 flex items-center justify-center">
+                    <span class="text-lg font-medium text-indigo-700">Start a session to see your average.</span>
+                </div>
+                
+                <!-- Intervals List -->
+                <div class="flex-grow bg-gray-50 border border-gray-200 rounded-lg p-4 h-64 md:h-auto overflow-y-auto">
+                    <h3 class="text-xl font-semibold mb-3 text-gray-700">Questions</h3>
+                    <div id="questionsList" class="space-y-2">
+                        <p id="questionsPlaceholder" class="text-gray-500">Your recorded questions will appear here.</p>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Message Box for alerts -->
+    <div id="messageBox" class="fixed top-5 right-5 bg-red-500 text-white p-4 rounded-lg shadow-lg opacity-0 pointer-events-none">
+        <span id="messageText"></span>
+    </div>
+
+    <script>
+        // DOM Elements
+        const startSessionBtn = document.getElementById('startSessionBtn');
+        const idealTimeContainer = document.getElementById('idealTimeContainer');
+        const idealTimeInput = document.getElementById('idealTimeInput');
+        const confirmTimeBtn = document.getElementById('confirmTimeBtn');
+        const endSessionBtn = document.getElementById('endSessionBtn');
+        const pauseSessionBtn = document.getElementById('pauseSessionBtn');
+        const nextQuestionBtn = document.getElementById('nextQuestionBtn');
+        const timerDisplay = document.getElementById('timerDisplay');
+        const messageArea = document.getElementById('messageArea');
+        const summaryArea = document.getElementById('summaryArea');
+        const questionsList = document.getElementById('questionsList');
+        const questionsPlaceholder = document.getElementById('questionsPlaceholder');
+        const messageBox = document.getElementById('messageBox');
+        const messageText = document.getElementById('messageText');
+
+        // State Variables
+        let sessionActive = false;
+        let timerRunning = false;
+        let idealTime = 0; // in milliseconds
+        let startTime = 0;
+        let timerInterval = null;
+        let questions = [];
+        let elapsedAtPause = 0;
+
+        // --- Event Listeners ---
+
+        startSessionBtn.addEventListener('click', () => {
+            startSessionBtn.classList.add('hidden');
+            idealTimeContainer.classList.remove('hidden');
+            summaryArea.innerHTML = '<span class="text-lg font-medium text-indigo-700">Set an ideal time to begin.</span>';
+            questionsList.innerHTML = '<p id="questionsPlaceholder" class="text-gray-500">Your recorded questions will appear here.</p>';
+            idealTimeInput.focus();
+        });
+
+        confirmTimeBtn.addEventListener('click', setIdealTime);
+        idealTimeInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                setIdealTime();
+            }
+        });
+
+        endSessionBtn.addEventListener('click', endSession);
+
+        pauseSessionBtn.addEventListener('click', togglePause);
+
+        nextQuestionBtn.addEventListener('click', handleEnterPress);
+
+        window.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && sessionActive) {
+                // Prevent form submission if inside one
+                e.preventDefault(); 
+                handleEnterPress();
+            }
+        });
+
+        // --- Core Functions ---
+
+        function setIdealTime() {
+            const timeInMinutes = parseFloat(idealTimeInput.value);
+            if (isNaN(timeInMinutes) || timeInMinutes <= 0) {
+                showAlert("Please enter a valid, positive number for minutes.");
+                return;
+            }
+
+            idealTime = timeInMinutes * 60 * 1000;
+            sessionActive = true;
+            questions = [];
+            elapsedAtPause = 0;
+
+            idealTimeContainer.classList.add('hidden');
+            endSessionBtn.classList.remove('hidden');
+            pauseSessionBtn.classList.remove('hidden');
+            nextQuestionBtn.classList.remove('hidden');
+            nextQuestionBtn.textContent = "Start"; // Changed from "Start Timer"
+            nextQuestionBtn.disabled = false;
+            
+            messageArea.textContent = "Hit Enter to start stopwatch";
+            summaryArea.innerHTML = `<span class="text-sm text-gray-600">Ideal Time:</span> <span class="text-lg font-semibold text-indigo-800">${formatTime(idealTime)}</span>`;
+        }
+
+        function handleEnterPress() {
+            if (timerRunning) {
+                // --- STOPPING the current interval & STARTING next ---
+                clearInterval(timerInterval);
+                const elapsedTime = Date.now() - startTime;
+                
+                questions.push(elapsedTime);
+                displayQuestion(elapsedTime);
+                
+                // --- IMMEDIATELY STARTING the next interval ---
+                startTime = Date.now();
+                elapsedAtPause = 0; // Reset pause time for new interval
+                nextQuestionBtn.textContent = "Next"; // Changed from "Next Question"
+                // timerRunning remains true
+                // messageArea text remains "Hit Enter to stop."
+                timerInterval = setInterval(updateTimer, 1000); // Update every second
+                
+            } else {
+                // --- STARTING or RESUMING ---
+                resumeSession();
+            }
+        }
+
+        function endSession() {
+            sessionActive = false;
+            timerRunning = false;
+            clearInterval(timerInterval);
+            elapsedAtPause = 0;
+
+            // *** FIX: Calculate average BEFORE clearing the array ***
+            calculateAverage(); 
+            questions = []; // Clear array after calculation
+
+            startSessionBtn.classList.remove('hidden');
+            endSessionBtn.classList.add('hidden');
+            pauseSessionBtn.classList.add('hidden');
+            nextQuestionBtn.classList.add('hidden');
+            
+            // Reset pause button appearance
+            pauseSessionBtn.textContent = "Pause Session";
+            pauseSessionBtn.classList.remove('bg-green-500', 'hover:bg-green-600');
+            pauseSessionBtn.classList.add('bg-yellow-500', 'hover:bg-yellow-600');
+            
+            messageArea.textContent = "";
+            timerDisplay.textContent = formatTime(0);
+            idealTimeInput.value = "";
+            
+            // calculateAverage(); // <-- REMOVED this redundant call
+        }
+
+        // --- New Pause/Resume Functions ---
+        function togglePause() {
+            if (timerRunning) {
+                pauseSession();
+            } else {
+                resumeSession();
+            }
+        }
+
+        function pauseSession() {
+            clearInterval(timerInterval);
+            timerRunning = false;
+            elapsedAtPause = Date.now() - startTime;
+            pauseSessionBtn.textContent = "Resume Session";
+            pauseSessionBtn.classList.replace('bg-yellow-500', 'bg-green-500');
+            pauseSessionBtn.classList.replace('hover:bg-yellow-600', 'hover:bg-green-600');
+            messageArea.textContent = "Session Paused. Hit Enter to resume.";
+            
+            // Disable and update "Next" button
+            nextQuestionBtn.disabled = true;
+            nextQuestionBtn.textContent = "Paused"; // Changed from "Timer Paused"
+        }
+
+        function resumeSession() {
+            timerRunning = true;
+            startTime = Date.now() - elapsedAtPause;
+            // elapsedAtPause = 0; // Don't reset here, only on new interval
+            pauseSessionBtn.textContent = "Pause Session";
+            pauseSessionBtn.classList.replace('bg-green-500', 'bg-yellow-500');
+            pauseSessionBtn.classList.replace('hover:bg-green-600', 'hover:bg-yellow-600');
+            messageArea.textContent = "Hit Enter to stop.";
+            
+            // Enable and update "Next" button
+            nextQuestionBtn.disabled = false;
+            // --- FIX ---
+            // Whether starting for the first time or resuming from pause,
+            // the timer is now running, so the button's action is to log the "Next Question".
+            nextQuestionBtn.textContent = "Next"; // Changed from "Next Question"
+
+            timerInterval = setInterval(updateTimer, 1000); // Update every second
+        }
+
+
+        // --- Helper Functions ---
+
+        function updateTimer() {
+            const elapsed = Date.now() - startTime;
+            timerDisplay.textContent = formatTime(elapsed);
+        }
+
+        function displayQuestion(ms) {
+            // Remove placeholder if it exists
+            const placeholder = document.getElementById('questionsPlaceholder');
+            if (placeholder) {
+                placeholder.remove();
+            }
+
+            const questionEl = document.createElement('div');
+            let bgColor = 'bg-white';
+            let textColor = 'text-gray-800';
+
+            if (ms > idealTime) {
+                bgColor = 'bg-red-100';
+                textColor = 'text-red-800';
+            } else if (ms < idealTime * 0.75) {
+                bgColor = 'bg-green-100';
+                textColor = 'text-green-800';
+            } else {
+                bgColor = 'bg-blue-50';
+                textColor = 'text-blue-800';
+            }
+
+            questionEl.className = `p-3 rounded-lg shadow-sm ${bgColor} ${textColor} font-medium flex justify-between items-center`;
+            questionEl.innerHTML = `
+                <span>Question ${questions.length}:</span>
+                <span class="font-mono">${formatTime(ms)}</span>
+            `;
+            questionsList.appendChild(questionEl);
+            // Scroll to bottom
+            questionsList.scrollTop = questionsList.scrollHeight;
+        }
+
+        function calculateAverage() {
+            if (questions.length === 0) {
+                summaryArea.innerHTML = '<span class="text-lg font-medium text-indigo-700">No questions were recorded.</span>';
+                return;
+            }
+
+            const total = questions.reduce((a, b) => a + b, 0);
+            const avg = total / questions.length;
+
+            summaryArea.innerHTML = `
+                <div class="text-center">
+                    <span class="block text-sm text-gray-600">Average Time (${questions.length} questions):</span>
+                    <span class="block text-2xl font-bold text-indigo-800">${formatTime(avg)}</span>
+                </div>
+            `;
+        }
+
+        function formatTime(ms) {
+            let totalSeconds = Math.floor(ms / 1000);
+            let hours = Math.floor(totalSeconds / 3600);
+            totalSeconds %= 3600;
+            let minutes = Math.floor(totalSeconds / 60);
+            let seconds = totalSeconds % 60;
+
+            return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+        }
+
+        function showAlert(message) {
+            messageText.textContent = message;
+            messageBox.classList.remove('opacity-0');
+            
+            setTimeout(() => {
+                messageBox.classList.add('opacity-0');
+            }, 3000); // Hide after 3 seconds
+        }
+
+    </script>
+</body>
+</html>
+
+
+
+
+
+
+
