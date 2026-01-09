@@ -1,364 +1,635 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Question Timer</title>
-    <!-- Load Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        /* Custom font */
-        body {
-            font-family: 'Inter', sans-serif;
-        }
-        /* Ensure consistent font for timer */
-        #timerDisplay {
-            font-family: 'Courier New', Courier, monospace;
-        }
-        /* Custom styles for message box */
-        #messageBox {
-            transition: opacity 0.3s ease-in-out;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <title>Question Timer</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    body {
+      margin: 0;
+      padding: 20px;
+      background: #0f172a;
+      color: #e5e7eb;
+      display: flex;
+      justify-content: center;
+    }
+
+    .app {
+      width: 100%;
+      max-width: 900px;
+      background: #020617;
+      border-radius: 16px;
+      padding: 20px 24px 28px;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.6);
+      border: 1px solid #1f2937;
+    }
+
+    h1 {
+      margin-top: 0;
+      margin-bottom: 8px;
+      font-size: 24px;
+      font-weight: 600;
+    }
+
+    .hint {
+      font-size: 13px;
+      color: #9ca3af;
+      margin-bottom: 16px;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1.1fr) minmax(0, 1.4fr);
+      gap: 16px;
+    }
+
+    .card {
+      background: #020617;
+      border-radius: 12px;
+      border: 1px solid #1f2937;
+      padding: 14px 16px 16px;
+    }
+
+    .card h2 {
+      font-size: 16px;
+      margin: 0 0 8px;
+      font-weight: 600;
+    }
+
+    label {
+      display: block;
+      font-size: 13px;
+      margin-bottom: 6px;
+      color: #d1d5db;
+    }
+
+    input[type="number"] {
+      width: 100%;
+      padding: 7px 9px;
+      border-radius: 8px;
+      border: 1px solid #374151;
+      background: #0b1220;
+      color: #e5e7eb;
+      font-size: 13px;
+      outline: none;
+    }
+    input[type="number"]:focus {
+      border-color: #6366f1;
+      box-shadow: 0 0 0 1px #6366f1;
+    }
+
+    button {
+      border: none;
+      border-radius: 999px;
+      padding: 7px 14px;
+      font-size: 13px;
+      cursor: pointer;
+      margin-right: 6px;
+      margin-bottom: 6px;
+      background: #111827;
+      color: #e5e7eb;
+      border: 1px solid #1f2937;
+      transition: background 0.15s, transform 0.06s, box-shadow 0.15s;
+    }
+
+    button.primary {
+      background: #4f46e5;
+      border-color: #6366f1;
+    }
+    button.danger {
+      background: #b91c1c;
+      border-color: #ef4444;
+    }
+    button:disabled {
+      opacity: 0.4;
+      cursor: default;
+      box-shadow: none;
+      transform: none;
+    }
+    button:not(:disabled):hover {
+      background: #1f2937;
+    }
+    button.primary:not(:disabled):hover {
+      background: #4338ca;
+    }
+    button.danger:not(:disabled):hover {
+      background: #991b1b;
+    }
+    button:not(:disabled):active {
+      transform: translateY(1px);
+      box-shadow: 0 0 0 rgba(0,0,0,0);
+    }
+
+    .timer-display {
+      font-size: 40px;
+      font-weight: 700;
+      text-align: center;
+      margin: 10px 0 8px;
+    }
+
+    .timer-sub {
+      font-size: 13px;
+      text-align: center;
+      color: #9ca3af;
+      margin-bottom: 10px;
+    }
+
+    .pill-row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 4px;
+      margin-bottom: 8px;
+      font-size: 11px;
+    }
+
+    .pill {
+      padding: 3px 8px;
+      border-radius: 999px;
+      border: 1px solid #374151;
+      color: #9ca3af;
+    }
+
+    .pill span {
+      font-weight: 600;
+      color: #e5e7eb;
+    }
+
+    .question-counter {
+      font-size: 13px;
+      text-align: center;
+      margin-top: 4px;
+      color: #d1d5db;
+    }
+
+    .legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+      font-size: 11px;
+      margin-bottom: 6px;
+    }
+
+    .legend-item {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 2px 6px;
+      border-radius: 999px;
+      border: 1px solid #374151;
+      color: #9ca3af;
+    }
+    .legend-color {
+      width: 10px;
+      height: 10px;
+      border-radius: 999px;
+    }
+
+    .results-table-wrapper {
+      max-height: 280px;
+      overflow: auto;
+      border-radius: 8px;
+      border: 1px solid #1f2937;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+    }
+    thead {
+      position: sticky;
+      top: 0;
+      background: #020617;
+      z-index: 1;
+    }
+    th, td {
+      padding: 6px 8px;
+      border-bottom: 1px solid #1f2937;
+      text-align: left;
+      white-space: nowrap;
+    }
+    th {
+      font-weight: 600;
+      color: #9ca3af;
+    }
+
+    tr.good {
+      background: rgba(34,197,94,0.12);
+    }
+    tr.ok {
+      background: rgba(249,250,251,0.02);
+    }
+    tr.buffer {
+      background: rgba(56,189,248,0.10);
+    }
+    tr.slow {
+      background: rgba(249,115,22,0.18);
+    }
+    tr.skip {
+      background: rgba(248,113,113,0.22);
+    }
+
+    .status-pill {
+      border-radius: 999px;
+      padding: 2px 8px;
+      font-size: 11px;
+      border: 1px solid #374151;
+      display: inline-block;
+    }
+    .status-good { color: #22c55e; border-color: #22c55e; }
+    .status-ok { color: #f9fafb; border-color: #9ca3af; }
+    .status-buffer { color: #38bdf8; border-color: #38bdf8; }
+    .status-slow { color: #fdba74; border-color: #fb923c; }
+    .status-skip { color: #fecaca; border-color: #fca5a5; }
+
+    .summary {
+      margin-top: 10px;
+      padding-top: 10px;
+      border-top: 1px dashed #1f2937;
+      font-size: 13px;
+      color: #d1d5db;
+    }
+    .summary strong {
+      color: #e5e7eb;
+    }
+    .summary-row {
+      margin-bottom: 3px;
+    }
+
+    .muted {
+      color: #9ca3af;
+    }
+
+    @media (max-width: 800px) {
+      .layout {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
 </head>
-<body class="bg-gray-100 text-gray-800 flex items-center justify-center min-h-screen p-4">
+<body>
+<div class="app">
+  <h1>Question Timer</h1>
+  <div class="hint">
+    Keyboard: <strong>Enter</strong> = next question &nbsp;•&nbsp;
+    <strong>Space</strong> = mark “did not get” &nbsp;•&nbsp;
+    Works in whole seconds only.
+  </div>
 
-    <div class="w-full max-w-4xl bg-white rounded-lg shadow-xl p-6 md:p-8">
-        <h1 class="text-3xl font-bold text-center text-indigo-600 mb-6">Question Timer</h1>
+  <div class="layout">
+    <!-- Left: Session setup + timer controls -->
+    <div class="card">
+      <h2>Session Setup</h2>
+      <label for="maxTimeInput">Maximum time per question (seconds)</label>
+      <input id="maxTimeInput" type="number" min="1" value="60">
+      <div style="margin-top:8px;margin-bottom:4px;">
+        <button id="startSessionBtn" class="primary">Start New Session</button>
+      </div>
+      <div class="pill-row">
+        <div class="pill">Current max: <span id="currentMaxLabel">60s</span></div>
+        <div class="pill">Questions so far: <span id="questionsCountLabel">0</span></div>
+      </div>
 
-        <!-- Main Content Grid -->
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
+      <hr style="border: none; border-top: 1px dashed #1f2937; margin: 10px 0;">
 
-            <!-- Left Column: Controls & Timer -->
-            <div class="flex flex-col space-y-6">
-                
-                <!-- Session Controls -->
-                <div id="sessionControls" class="space-y-4">
-                    <button id="startSessionBtn" class="w-full bg-indigo-600 text-white font-semibold py-3 px-4 rounded-lg shadow-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-opacity-75 transition duration-200">
-                        Start New Session
-                    </button>
-                    
-                    <!-- Ideal Time Input (hidden by default) -->
-                    <div id="idealTimeContainer" class="hidden space-y-2">
-                        <label for="idealTimeInput" class="block text-sm font-medium text-gray-700">Ideal Time (in minutes):</label>
-                        <div class="flex space-x-2">
-                            <input type="number" id="idealTimeInput" min="0.1" step="0.1" class="flex-grow p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="e.g., 4">
-                            <button id="confirmTimeBtn" class="bg-green-600 text-white font-semibold py-2 px-4 rounded-lg shadow-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500">
-                                Set
-                            </button>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Timer Display -->
-                <div class="text-center">
-                    <div id="timerDisplay" class="text-7xl font-bold text-gray-800" style="font-family: 'Courier New', Courier, monospace;">
-                        00:00:00
-                    </div>
-                    <div id="messageArea" class="text-lg text-gray-600 h-6 mt-2">
-                        <!-- Messages like "Hit Enter" will appear here -->
-                    </div>
-                </div>
-
-                <!-- "Next Question" Button (for mobile/tap) -->
-                <button id="nextQuestionBtn" class="hidden w-full my-4 py-8 bg-blue-500 text-white font-semibold rounded-lg shadow-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-75 transition duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center text-2xl text-center">
-                    Start
-                </button>
-
-                <!-- Pause Session Button -->
-                <button id="pauseSessionBtn" class="hidden w-full bg-yellow-500 text-white font-semibold py-3 px-4 rounded-lg shadow-md hover:bg-yellow-600 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:ring-opacity-75 transition duration-200">
-                    Pause Session
-                </button>
-
-                <!-- End Session Button -->
-                <button id="endSessionBtn" class="hidden w-full bg-red-600 text-white font-semibold py-3 px-4 rounded-lg shadow-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-opacity-75 transition duration-200">
-                    End Session
-                </button>
-
-            </div>
-
-            <!-- Right Column: Results -->
-            <div class="flex flex-col space-y-4">
-                <!-- Summary Area -->
-                <div id="summaryArea" class="bg-indigo-50 p-4 rounded-lg text-center h-20 flex items-center justify-center">
-                    <span class="text-lg font-medium text-indigo-700">Start a session to see your average.</span>
-                </div>
-                
-                <!-- Intervals List -->
-                <div class="flex-grow bg-gray-50 border border-gray-200 rounded-lg p-4 h-64 md:h-auto overflow-y-auto">
-                    <h3 class="text-xl font-semibold mb-3 text-gray-700">Questions</h3>
-                    <div id="questionsList" class="space-y-2">
-                        <p id="questionsPlaceholder" class="text-gray-500">Your recorded questions will appear here.</p>
-                    </div>
-                </div>
-            </div>
-
-        </div>
+      <h2>Timer</h2>
+      <div class="timer-display" id="timerDisplay">0s</div>
+      <div class="timer-sub" id="timerSubtext">Press “Start session” to begin.</div>
+      <div style="text-align:center;margin-bottom:6px;">
+        <button id="startTimerBtn" class="primary">Start / Resume</button>
+        <button id="pauseTimerBtn">Pause</button>
+      </div>
+      <div style="text-align:center;margin-bottom:6px;">
+        <button id="nextQuestionBtn">Next Question (Enter)</button>
+        <button id="skipQuestionBtn">Did Not Get (Space)</button>
+      </div>
+      <div style="text-align:center;">
+        <button id="endSessionBtn" class="danger">End Session &amp; Show Summary</button>
+      </div>
+      <div class="question-counter" id="questionCounter">
+        No active session.
+      </div>
     </div>
 
-    <!-- Message Box for alerts -->
-    <div id="messageBox" class="fixed top-5 right-5 bg-red-500 text-white p-4 rounded-lg shadow-lg opacity-0 pointer-events-none">
-        <span id="messageText"></span>
+    <!-- Right: Results + summary -->
+    <div class="card">
+      <h2>Question Log</h2>
+      <div class="legend">
+        <div class="legend-item"><span class="legend-color" style="background:#22c55e;"></span> ≤ 70% max (green)</div>
+        <div class="legend-item"><span class="legend-color" style="background:#f9fafb;"></span> 90–105% max (white)</div>
+        <div class="legend-item"><span class="legend-color" style="background:#fb923c;"></span> &gt; 105% max (orange)</div>
+        <div class="legend-item"><span class="legend-color" style="background:#f97373;"></span> Didn’t get (red)</div>
+      </div>
+      <div class="results-table-wrapper">
+        <table>
+          <thead>
+          <tr>
+            <th>#</th>
+            <th>Time (s)</th>
+            <th>% of max</th>
+            <th>Status</th>
+          </tr>
+          </thead>
+          <tbody id="resultsBody">
+          <tr><td colspan="4" class="muted">No questions yet.</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="summary" id="summary" style="display:none;"></div>
     </div>
+  </div>
+</div>
 
-    <script>
-        // DOM Elements
-        const startSessionBtn = document.getElementById('startSessionBtn');
-        const idealTimeContainer = document.getElementById('idealTimeContainer');
-        const idealTimeInput = document.getElementById('idealTimeInput');
-        const confirmTimeBtn = document.getElementById('confirmTimeBtn');
-        const endSessionBtn = document.getElementById('endSessionBtn');
-        const pauseSessionBtn = document.getElementById('pauseSessionBtn');
-        const nextQuestionBtn = document.getElementById('nextQuestionBtn');
-        const timerDisplay = document.getElementById('timerDisplay');
-        const messageArea = document.getElementById('messageArea');
-        const summaryArea = document.getElementById('summaryArea');
-        const questionsList = document.getElementById('questionsList');
-        const questionsPlaceholder = document.getElementById('questionsPlaceholder');
-        const messageBox = document.getElementById('messageBox');
-        const messageText = document.getElementById('messageText');
+<script>
+  // State
+  let maxTimePerQuestion = 60;
+  let timerInterval = null;
+  let currentSeconds = 0;
+  let currentQuestion = 0;
+  let sessionActive = false;
+  let results = []; // {index, time, percent, status}
 
-        // State Variables
-        let sessionActive = false;
-        let timerRunning = false;
-        let idealTime = 0; // in milliseconds
-        let startTime = 0;
-        let timerInterval = null;
-        let questions = [];
-        let elapsedAtPause = 0;
+  const maxTimeInput = document.getElementById('maxTimeInput');
+  const currentMaxLabel = document.getElementById('currentMaxLabel');
+  const questionsCountLabel = document.getElementById('questionsCountLabel');
+  const timerDisplay = document.getElementById('timerDisplay');
+  const timerSubtext = document.getElementById('timerSubtext');
+  const questionCounter = document.getElementById('questionCounter');
+  const resultsBody = document.getElementById('resultsBody');
+  const summaryDiv = document.getElementById('summary');
 
-        // --- Event Listeners ---
+  const startSessionBtn = document.getElementById('startSessionBtn');
+  const startTimerBtn = document.getElementById('startTimerBtn');
+  const pauseTimerBtn = document.getElementById('pauseTimerBtn');
+  const nextQuestionBtn = document.getElementById('nextQuestionBtn');
+  const skipQuestionBtn = document.getElementById('skipQuestionBtn');
+  const endSessionBtn = document.getElementById('endSessionBtn');
 
-        startSessionBtn.addEventListener('click', () => {
-            startSessionBtn.classList.add('hidden');
-            idealTimeContainer.classList.remove('hidden');
-            summaryArea.innerHTML = '<span class="text-lg font-medium text-indigo-700">Set an ideal time to begin.</span>';
-            questionsList.innerHTML = '<p id="questionsPlaceholder" class="text-gray-500">Your recorded questions will appear here.</p>';
-            idealTimeInput.focus();
-        });
+  function updateTimerDisplay() {
+    timerDisplay.textContent = currentSeconds + 's';
+    if (sessionActive) {
+      timerSubtext.textContent = 'Answering question ' + currentQuestion +
+        ' / ' + (maxTimePerQuestion + 's max');
+    }
+  }
 
-        confirmTimeBtn.addEventListener('click', setIdealTime);
-        idealTimeInput.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter') {
-                setIdealTime();
-            }
-        });
+  function updateQuestionCounter() {
+    if (!sessionActive) {
+      questionCounter.textContent = 'No active session.';
+    } else {
+      questionCounter.textContent = 'Question ' + currentQuestion +
+        ' • Total logged: ' + results.length;
+    }
+  }
 
-        endSessionBtn.addEventListener('click', endSession);
+  function resetTimer() {
+    stopTimer();
+    currentSeconds = 0;
+    updateTimerDisplay();
+  }
 
-        pauseSessionBtn.addEventListener('click', togglePause);
+  function startTimer() {
+    if (!sessionActive) return;
+    if (timerInterval !== null) return;
+    timerInterval = setInterval(() => {
+      currentSeconds += 1;
+      updateTimerDisplay();
+    }, 1000);
+  }
 
-        nextQuestionBtn.addEventListener('click', handleEnterPress);
+  function stopTimer() {
+    if (timerInterval !== null) {
+      clearInterval(timerInterval);
+      timerInterval = null;
+    }
+  }
 
-        window.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter' && sessionActive) {
-                // Prevent form submission if inside one
-                e.preventDefault(); 
-                handleEnterPress();
-            }
-        });
+  function clearResultsTable() {
+    resultsBody.innerHTML = '';
+  }
 
-        // --- Core Functions ---
+  function appendResultRow(result) {
+    const tr = document.createElement('tr');
+    tr.classList.add(result.rowClass);
 
-        function setIdealTime() {
-            const timeInMinutes = parseFloat(idealTimeInput.value);
-            if (isNaN(timeInMinutes) || timeInMinutes <= 0) {
-                showAlert("Please enter a valid, positive number for minutes.");
-                return;
-            }
+    const tdIndex = document.createElement('td');
+    tdIndex.textContent = result.index;
 
-            idealTime = timeInMinutes * 60 * 1000;
-            sessionActive = true;
-            questions = [];
-            elapsedAtPause = 0;
+    const tdTime = document.createElement('td');
+    tdTime.textContent = result.time;
 
-            idealTimeContainer.classList.add('hidden');
-            endSessionBtn.classList.remove('hidden');
-            pauseSessionBtn.classList.remove('hidden');
-            nextQuestionBtn.classList.remove('hidden');
-            nextQuestionBtn.textContent = "Start"; // Changed from "Start Timer"
-            nextQuestionBtn.disabled = false;
-            
-            messageArea.textContent = "Hit Enter to start stopwatch";
-            summaryArea.innerHTML = `<span class="text-sm text-gray-600">Ideal Time:</span> <span class="text-lg font-semibold text-indigo-800">${formatTime(idealTime)}</span>`;
-        }
+    const tdPercent = document.createElement('td');
+    tdPercent.textContent = isNaN(result.percent) ? '—' : result.percent.toFixed(1) + '%';
 
-        function handleEnterPress() {
-            if (timerRunning) {
-                // --- STOPPING the current interval & STARTING next ---
-                clearInterval(timerInterval);
-                const elapsedTime = Date.now() - startTime;
-                
-                questions.push(elapsedTime);
-                displayQuestion(elapsedTime);
-                
-                // --- IMMEDIATELY STARTING the next interval ---
-                startTime = Date.now();
-                elapsedAtPause = 0; // Reset pause time for new interval
-                nextQuestionBtn.textContent = "Next"; // Changed from "Next Question"
-                // timerRunning remains true
-                // messageArea text remains "Hit Enter to stop."
-                timerInterval = setInterval(updateTimer, 1000); // Update every second
-                
-            } else {
-                // --- STARTING or RESUMING ---
-                resumeSession();
-            }
-        }
+    const tdStatus = document.createElement('td');
+    const span = document.createElement('span');
+    span.className = 'status-pill ' + result.statusClass;
+    span.textContent = result.statusLabel;
+    tdStatus.appendChild(span);
 
-        function endSession() {
-            sessionActive = false;
-            timerRunning = false;
-            clearInterval(timerInterval);
-            elapsedAtPause = 0;
+    tr.append(tdIndex, tdTime, tdPercent, tdStatus);
+    resultsBody.appendChild(tr);
+  }
 
-            // *** FIX: Calculate average BEFORE clearing the array ***
-            calculateAverage(); 
-            questions = []; // Clear array after calculation
+  function refreshResultsTable() {
+    clearResultsTable();
+    if (results.length === 0) {
+      const tr = document.createElement('tr');
+      const td = document.createElement('td');
+      td.colSpan = 4;
+      td.textContent = 'No questions yet.';
+      td.className = 'muted';
+      tr.appendChild(td);
+      resultsBody.appendChild(tr);
+      return;
+    }
+    results.forEach(appendResultRow);
+  }
 
-            startSessionBtn.classList.remove('hidden');
-            endSessionBtn.classList.add('hidden');
-            pauseSessionBtn.classList.add('hidden');
-            nextQuestionBtn.classList.add('hidden');
-            
-            // Reset pause button appearance
-            pauseSessionBtn.textContent = "Pause Session";
-            pauseSessionBtn.classList.remove('bg-green-500', 'hover:bg-green-600');
-            pauseSessionBtn.classList.add('bg-yellow-500', 'hover:bg-yellow-600');
-            
-            messageArea.textContent = "";
-            timerDisplay.textContent = formatTime(0);
-            idealTimeInput.value = "";
-            
-            // calculateAverage(); // <-- REMOVED this redundant call
-        }
+  function classifyResult(time, statusType) {
+    if (statusType === 'skip') {
+      return {
+        rowClass: 'skip',
+        statusClass: 'status-skip',
+        statusLabel: 'Did not get',
+        percent: NaN
+      };
+    }
+    const percent = (time / maxTimePerQuestion) * 100;
 
-        // --- New Pause/Resume Functions ---
-        function togglePause() {
-            if (timerRunning) {
-                pauseSession();
-            } else {
-                resumeSession();
-            }
-        }
+    // Default classification based on percentage
+    let rowClass, statusClass, statusLabel;
+    if (percent <= 70) {
+      rowClass = 'good';
+      statusClass = 'status-good';
+      statusLabel = '≤70% (fast)';
+    } else if (percent >= 90 && percent <= 105) {
+      rowClass = 'ok';
+      statusClass = 'status-ok';
+      statusLabel = '90–105% (on time)';
+    } else if (percent > 105) {
+      rowClass = 'slow';
+      statusClass = 'status-slow';
+      statusLabel = '>105% (slow)';
+    } else {
+      // 70–90% window: not specified by you, so a neutral "buffer" zone.
+      rowClass = 'buffer';
+      statusClass = 'status-buffer';
+      statusLabel = '70–90% (buffer)';
+    }
 
-        function pauseSession() {
-            clearInterval(timerInterval);
-            timerRunning = false;
-            elapsedAtPause = Date.now() - startTime;
-            pauseSessionBtn.textContent = "Resume Session";
-            pauseSessionBtn.classList.replace('bg-yellow-500', 'bg-green-500');
-            pauseSessionBtn.classList.replace('hover:bg-yellow-600', 'hover:bg-green-600');
-            messageArea.textContent = "Session Paused. Hit Enter to resume.";
-            
-            // Disable and update "Next" button
-            nextQuestionBtn.disabled = true;
-            nextQuestionBtn.textContent = "Paused"; // Changed from "Timer Paused"
-        }
+    return { rowClass, statusClass, statusLabel, percent };
+  }
 
-        function resumeSession() {
-            timerRunning = true;
-            startTime = Date.now() - elapsedAtPause;
-            // elapsedAtPause = 0; // Don't reset here, only on new interval
-            pauseSessionBtn.textContent = "Pause Session";
-            pauseSessionBtn.classList.replace('bg-green-500', 'bg-yellow-500');
-            pauseSessionBtn.classList.replace('hover:bg-green-600', 'hover:bg-yellow-600');
-            messageArea.textContent = "Hit Enter to stop.";
-            
-            // Enable and update "Next" button
-            nextQuestionBtn.disabled = false;
-            // --- FIX ---
-            // Whether starting for the first time or resuming from pause,
-            // the timer is now running, so the button's action is to log the "Next Question".
-            nextQuestionBtn.textContent = "Next"; // Changed from "Next Question"
+  function logCurrentQuestion(statusType) {
+    if (!sessionActive || currentQuestion === 0) return;
+    const time = currentSeconds;
+    const classification = classifyResult(time, statusType);
 
-            timerInterval = setInterval(updateTimer, 1000); // Update every second
-        }
+    const result = {
+      index: currentQuestion,
+      time: time,
+      percent: classification.percent,
+      rowClass: classification.rowClass,
+      statusClass: classification.statusClass,
+      statusLabel: classification.statusLabel,
+      statusType: statusType
+    };
+    results.push(result);
+    refreshResultsTable();
+    questionsCountLabel.textContent = results.length.toString();
+  }
 
+  function startNewSession() {
+    const val = parseInt(maxTimeInput.value, 10);
+    if (isNaN(val) || val <= 0) {
+      alert('Please enter a positive number of seconds for max time per question.');
+      return;
+    }
+    maxTimePerQuestion = val;
+    currentMaxLabel.textContent = maxTimePerQuestion + 's';
 
-        // --- Helper Functions ---
+    // Reset state
+    stopTimer();
+    currentSeconds = 0;
+    currentQuestion = 1;
+    sessionActive = true;
+    results = [];
+    summaryDiv.style.display = 'none';
+    summaryDiv.innerHTML = '';
 
-        function updateTimer() {
-            const elapsed = Date.now() - startTime;
-            timerDisplay.textContent = formatTime(elapsed);
-        }
+    updateTimerDisplay();
+    updateQuestionCounter();
+    refreshResultsTable();
+    questionsCountLabel.textContent = '0';
+    timerSubtext.textContent = 'Session started. You are on question 1. Press Start / Resume or use keyboard shortcuts.';
+  }
 
-        function displayQuestion(ms) {
-            // Remove placeholder if it exists
-            const placeholder = document.getElementById('questionsPlaceholder');
-            if (placeholder) {
-                placeholder.remove();
-            }
+  function moveToNextQuestion(statusType) {
+    if (!sessionActive) return;
+    // Record current question first
+    logCurrentQuestion(statusType);
+    // Prepare next question
+    currentQuestion += 1;
+    resetTimer();      // resets & stops; we immediately start timer again
+    startTimer();      // auto-start timer for the next question
+    updateQuestionCounter();
+    timerSubtext.textContent = 'Answering question ' + currentQuestion + ' / ' +
+      (maxTimePerQuestion + 's max');
+  }
 
-            const questionEl = document.createElement('div');
-            let bgColor = 'bg-white';
-            let textColor = 'text-gray-800';
+  function endSession() {
+    if (!sessionActive) {
+      alert('No active session to end.');
+      return;
+    }
+    // Log the current question as "completed" if there has been some time spent
+    if (currentQuestion > 0 && currentSeconds > 0) {
+      logCurrentQuestion('normal');
+    }
+    stopTimer();
+    sessionActive = false;
+    updateQuestionCounter();
+    timerSubtext.textContent = 'Session ended. See summary on the right.';
 
-            if (ms > idealTime) {
-                bgColor = 'bg-red-100';
-                textColor = 'text-red-800';
-            } else if (ms < idealTime * 0.75) {
-                bgColor = 'bg-green-100';
-                textColor = 'text-green-800';
-            } else {
-                bgColor = 'bg-blue-50';
-                textColor = 'text-blue-800';
-            }
+    // Compute summary
+    if (results.length === 0) {
+      summaryDiv.style.display = 'block';
+      summaryDiv.innerHTML = '<div class="summary-row muted">No questions were recorded.</div>';
+      return;
+    }
 
-            questionEl.className = `p-3 rounded-lg shadow-sm ${bgColor} ${textColor} font-medium flex justify-between items-center`;
-            questionEl.innerHTML = `
-                <span>Question ${questions.length}:</span>
-                <span class="font-mono">${formatTime(ms)}</span>
-            `;
-            questionsList.appendChild(questionEl);
-            // Scroll to bottom
-            questionsList.scrollTop = questionsList.scrollHeight;
-        }
+    let totalTimeAll = 0;
+    let totalTimeAttempted = 0;
+    let attemptedCount = 0;
+    let skipCount = 0;
 
-        function calculateAverage() {
-            if (questions.length === 0) {
-                summaryArea.innerHTML = '<span class="text-lg font-medium text-indigo-700">No questions were recorded.</span>';
-                return;
-            }
+    results.forEach(r => {
+      totalTimeAll += r.time;
+      if (r.statusType === 'skip') {
+        skipCount += 1;
+      } else {
+        attemptedCount += 1;
+        totalTimeAttempted += r.time;
+      }
+    });
 
-            const total = questions.reduce((a, b) => a + b, 0);
-            const avg = total / questions.length;
+    const avgAll = totalTimeAll / results.length;
+    const avgAttempted = attemptedCount > 0 ? (totalTimeAttempted / attemptedCount) : NaN;
 
-            summaryArea.innerHTML = `
-                <div class="text-center">
-                    <span class="block text-sm text-gray-600">Average Time (${questions.length} questions):</span>
-                    <span class="block text-2xl font-bold text-indigo-800">${formatTime(avg)}</span>
-                </div>
-            `;
-        }
+    let html = '';
+    html += '<div class="summary-row"><strong>Total questions:</strong> ' +
+      results.length + '</div>';
+    html += '<div class="summary-row"><strong>Marked “did not get” (spacebar):</strong> ' +
+      skipCount + '</div>';
+    html += '<div class="summary-row"><strong>Average time per question (all):</strong> ' +
+      avgAll.toFixed(2) + 's</div>';
+    if (!isNaN(avgAttempted)) {
+      html += '<div class="summary-row"><strong>Average time per question (attempted only):</strong> ' +
+        avgAttempted.toFixed(2) + 's</div>';
+    } else {
+      html += '<div class="summary-row muted">No attempted questions (everything was marked “did not get”).</div>';
+    }
 
-        function formatTime(ms) {
-            let totalSeconds = Math.floor(ms / 1000);
-            let hours = Math.floor(totalSeconds / 3600);
-            totalSeconds %= 3600;
-            let minutes = Math.floor(totalSeconds / 60);
-            let seconds = totalSeconds % 60;
+    summaryDiv.innerHTML = html;
+    summaryDiv.style.display = 'block';
+  }
 
-            return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
-        }
+  // Button handlers
+  startSessionBtn.addEventListener('click', startNewSession);
+  startTimerBtn.addEventListener('click', startTimer);
+  pauseTimerBtn.addEventListener('click', stopTimer);
+  nextQuestionBtn.addEventListener('click', () => moveToNextQuestion('normal'));
+  skipQuestionBtn.addEventListener('click', () => moveToNextQuestion('skip'));
+  endSessionBtn.addEventListener('click', endSession);
 
-        function showAlert(message) {
-            messageText.textContent = message;
-            messageBox.classList.remove('opacity-0');
-            
-            setTimeout(() => {
-                messageBox.classList.add('opacity-0');
-            }, 3000); // Hide after 3 seconds
-        }
+  // Keyboard shortcuts: Enter = next question, Space = skip
+  document.addEventListener('keydown', (e) => {
+    // ignore if focused in an input/textarea (so you can type numbers)
+    const tag = e.target.tagName.toLowerCase();
+    if (tag === 'input' || tag === 'textarea') return;
 
-    </script>
+    if (e.code === 'Enter') {
+      e.preventDefault();
+      if (sessionActive) {
+        moveToNextQuestion('normal');
+      }
+    } else if (e.code === 'Space') {
+      e.preventDefault();
+      if (sessionActive) {
+        moveToNextQuestion('skip');
+      }
+    }
+  });
+
+  // Initial display
+  updateTimerDisplay();
+  updateQuestionCounter();
+</script>
 </body>
 </html>
-
-
-
-
-
-
-
